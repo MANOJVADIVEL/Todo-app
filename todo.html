@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="uft-8">
+        <meta name="viewpoint"content ="Width=device-width,initial-scale1">
+        <title>Todo App</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+        <style> body{
+            margin:0;
+            padding:0;
+            display:flex;
+            align-items:center;
+            justify-content: center;
+            height: 100vh;
+            background:#1f1f1f;
+        }
+        .container{
+            border:1px solid white;
+            width:500px;
+            height:400px;
+            border-radius:20px;
+            display:flex;
+            flex-direction: column;
+            align-items: center;
+            color:white;
+
+        }
+        .box{
+            display:flex;
+            flex-direction:column;
+            flex-wrap: wrap;
+            height:270px;
+            margin-top:20px;
+        }
+        .todo > p{
+            margin:0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .todo{
+            display: flex;
+            gap:10px;
+            align-items:center;
+        }
+        </style>
+    </head>
+    <body>
+
+
+        <div class="container">
+            <h2>To-do</h2>
+            <form id ="form">
+                <input type="text"placeholder="Enter todo">
+            </form>
+            <div class="box" id="box">
+             <!--  <div class="todo">
+                    <p>Read Books</p>
+                    <i class="fa-solid fa-check fa-lg" style="color: #09f16d;"></i>
+                    <i class="fa-solid fa-xmark" style="color: #ff1100;"></i>
+                </div> -->
+            </div>
+        </div>
+</body>
+<script>
+    const form = document.getElementById('form');
+    const box = document.getElementById('box');
+    const handleSubmit = (event)=>{
+        event.preventDefault();
+        const textContent = event.target[0].value;
+        event.target[0].value = '';
+        const data = {
+            text:textContent
+        }
+        const options={
+            method:"POST",
+            headers:{
+                'content-Type':'application/json'
+            },
+            cors:true,
+            body:JSON.stringify(data)
+        }
+        fetch("http://localhost:3333/create",options)
+        .then((res)=>res.json())
+        .then((res)=>{
+            fetchAllTodos();
+        })
+   }
+   const addTodosToUI = (todos) =>{
+    box.innerHTML='';
+    for(let i = 0; i< todos.length; i++){
+        if(todos[i].completed === true){
+            const element=`<div class="todo">
+                    <p><strike>${todos[i].text}</strike></p>
+                    <i onclick="deleteTodo(event)" id="${todos[i]._id}"class="fa-solid fa-xmark" style="color: #ff1100;cursor:pointer;"></i>
+                </div>`
+               box.innerHTML +=element
+            }else{
+                const element=`<div class="todo">
+                    <p>${todos[i].text}</p>
+                    <i onclick="completeTodo(event)" id="${todos[i]._id}"class="fa-solid fa-check fa-lg" style="color: #09f16d;cursor:pointer;"></i>
+                    <i onclick="deleteTodo(event)" id="${todos[i]._id}"class="fa-solid fa-xmark" style="color: #ff1100;cursor:pointer;"></i>
+                </div>`
+               box.innerHTML +=element
+            }
+        }
+    }
+   const fetchAllTodos = ()=>{
+    fetch("http://localhost:3333/getalltodos")
+    .then((res)=>res.json())
+    .then((res)=>addTodosToUI(res.todos))
+   }
+
+   const deleteTodo =(event) =>{
+    console.log(event.target.id);
+    const options = {
+        method:"DELETE",
+        cors:true
+    }
+    fetch("http://localhost:3333/deleteTodo?id="+event.target.id,options)
+    .then((res)=>res.json())
+    .then((res)=>fetchAllTodos())
+   }
+
+   const completeTodo =(event) =>{
+    console.log(event.target.id);
+    const options = {
+        method:"PUT",
+        cors:true
+    }
+    fetch("http://localhost:3333/completeTodo?id="+event.target.id,options)
+    .then((res)=>res.json())
+    .then((res)=>fetchAllTodos())
+   }
+
+
+   fetchAllTodos()
+
+   form.addEventListener('submit',handleSubmit)
+</script>
+</html>
